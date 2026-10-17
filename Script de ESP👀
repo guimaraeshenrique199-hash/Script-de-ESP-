@@ -18,10 +18,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 local MUSIC_ID = "rbxassetid://1839246711"
 local IMAGE_ID = "rbxassetid://129676103296599"
 
--- Tempo que a intro fica parada
 local HOLD_TIME = 2.5
-
--- Duração da animação final
 local ANIMATION_TIME = 2.5
 
 --========================================================--
@@ -47,22 +44,18 @@ Text.Position = UDim2.new(0.5, 0, 0.42, 0)
 Text.Size = UDim2.new(0.9, 0, 0, 90)
 
 Text.BackgroundTransparency = 1
-
 Text.Text = "(By henrique)"
 Text.TextColor3 = Color3.fromRGB(255, 255, 255)
 Text.TextTransparency = 0
-
 Text.Font = Enum.Font.SciFi
 Text.TextScaled = true
 Text.TextSize = 50
-
 Text.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 Text.TextStrokeTransparency = 0.15
-
 Text.ZIndex = 10
 
 --========================================================--
--- IMAGEM
+-- IMAGEM DA INTRO
 --========================================================--
 
 local Image = Instance.new("ImageLabel")
@@ -76,7 +69,6 @@ Image.Size = UDim2.new(0, 100, 0, 100)
 Image.BackgroundTransparency = 1
 Image.Image = IMAGE_ID
 Image.ImageTransparency = 0
-
 Image.ScaleType = Enum.ScaleType.Fit
 Image.ZIndex = 10
 
@@ -101,47 +93,40 @@ task.wait(HOLD_TIME)
 
 --========================================================--
 -- ANIMAÇÃO DO TEXTO
--- Sobe e desaparece
 --========================================================--
 
-local TextEndPosition = UDim2.new(
-	0.5,
-	0,
-	0.42,
-	-130
-)
+local TextEndPosition = UDim2.new(0.5, 0, 0.42, -130)
 
 local TextTween = TweenService:Create(
-	Text,
-	TweenInfo.new(
-		ANIMATION_TIME,
-		Enum.EasingStyle.Quint,
-		Enum.EasingDirection.Out
-	),
-	{
-		Position = TextEndPosition,
-		TextTransparency = 1,
-		TextStrokeTransparency = 1
-	}
+    Text,
+    TweenInfo.new(
+        ANIMATION_TIME,
+        Enum.EasingStyle.Quint,
+        Enum.EasingDirection.Out
+    ),
+    {
+        Position = TextEndPosition,
+        TextTransparency = 1,
+        TextStrokeTransparency = 1
+    }
 )
 
 --========================================================--
 -- ANIMAÇÃO DA IMAGEM
--- Gira + diminui + desaparece
 --========================================================--
 
 local ImageTween = TweenService:Create(
-	Image,
-	TweenInfo.new(
-		ANIMATION_TIME,
-		Enum.EasingStyle.Quint,
-		Enum.EasingDirection.InOut
-	),
-	{
-		Size = UDim2.new(0, 0, 0, 0),
-		ImageTransparency = 1,
-		Rotation = 360
-	}
+    Image,
+    TweenInfo.new(
+        ANIMATION_TIME,
+        Enum.EasingStyle.Quint,
+        Enum.EasingDirection.InOut
+    ),
+    {
+        Size = UDim2.new(0, 0, 0, 0),
+        ImageTransparency = 1,
+        Rotation = 360
+    }
 )
 
 TextTween:Play()
@@ -154,86 +139,224 @@ ImageTween:Play()
 ImageTween.Completed:Wait()
 
 if Gui then
-	Gui:Destroy()
+    Gui:Destroy()
 end
 
--- A música continua somente até o próprio áudio terminar.
--- Não existe Loop.
-
 Music.Ended:Connect(function()
-	if Music and Music.Parent then
-		Music:Destroy()
-	end
+    if Music and Music.Parent then
+        Music:Destroy()
+    end
 end)
 
--- Segurança para limpar o áudio caso necessário
 task.delay(10, function()
-	if Music and Music.Parent then
-		Music:Destroy()
-	end
+    if Music and Music.Parent then
+        Music:Destroy()
+    end
 end)
 
+--========================================================--
+-- 👀 ESP BY HENRIQUE 👀
+--========================================================--
 
---[[
-    Script de ESP👀
-👀by henrique👁
-]]
+getgenv().Toggle = true
+getgenv().TC = false
 
-getgenv().Toggle = true -- This toggles the esp, turning it to false will turn it off
-getgenv().TC = false -- This toggles team check, turning it on will turn on team check
-local PlayerName = "Name" -- You can decide if you want the Player's name to be a display name which is "DisplayName", or username which is "Name"
+local PlayerName = "Name"
 
---//Variables\\--
+--// VARIABLES \\--
+
 local P = game:GetService("Players")
 local LP = P.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
 
---//Debounce\\--
-local DB = false
+--========================================================--
+-- 🖼️ FOTO DE PERFIL FIXA ACIMA DO NOME
+-- Tamanho constante na tela: 32x32 pixels.
+-- Acompanha o jogador e fica acima da caixa de texto.
+--========================================================--
 
---//NOTIFICAÇÃO MODIFICADA - COMO VOCÊ PEDIU!\\--
--- Primeiro limpa pra não dar erro se já tiver algo
-pcall(function() StarterGui:SetCore("ResetNotification", {}) end)
+local function AddProfilePicture(v, character)
+    if character:GetAttribute("HenriqueProfileCreated") then
+        return
+    end
 
--- Cria nossa notificação personalizada com IMAGEM
+    local head = character:FindFirstChild("Head")
+    local torso = character:FindFirstChild("UpperTorso")
+        or character:FindFirstChild("Torso")
+        or character:FindFirstChild("HumanoidRootPart")
+
+    if not head or not torso then
+        return
+    end
+
+    local success, thumbnail = pcall(function()
+        return P:GetUserThumbnailAsync(
+            v.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size100x100
+        )
+    end)
+
+    if not success or not thumbnail then
+        return
+    end
+
+    character:SetAttribute("HenriqueProfileCreated", true)
+
+    local ProfileGui = Instance.new("ScreenGui")
+    ProfileGui.Name = "HenriqueProfilePicture_" .. v.UserId
+    ProfileGui.ResetOnSpawn = false
+    ProfileGui.IgnoreGuiInset = true
+    ProfileGui.DisplayOrder = 10
+    ProfileGui.Parent = PlayerGui
+
+    local ProfileImage = Instance.new("ImageLabel")
+    ProfileImage.Name = "ProfileImage"
+    ProfileImage.AnchorPoint = Vector2.new(0.5, 0.5)
+
+    -- TAMANHO FIXO: NÃO AUMENTA NEM DIMINUI COM A DISTÂNCIA
+    ProfileImage.Size = UDim2.fromOffset(32, 32)
+    ProfileImage.BackgroundTransparency = 1
+    ProfileImage.Image = thumbnail
+    ProfileImage.ScaleType = Enum.ScaleType.Crop
+    ProfileImage.Visible = false
+    ProfileImage.ZIndex = 20
+    ProfileImage.Parent = ProfileGui
+
+    local connection
+
+    connection = RunService.RenderStepped:Connect(function()
+        if not ProfileGui.Parent
+            or not character.Parent
+            or not head.Parent then
+
+            if connection then
+                connection:Disconnect()
+            end
+
+            if ProfileGui.Parent then
+                ProfileGui:Destroy()
+            end
+
+            return
+        end
+
+        local camera = workspace.CurrentCamera
+
+        if not camera then
+            ProfileImage.Visible = false
+            return
+        end
+
+        -- Projeta a cabeça para a tela.
+        -- O deslocamento em pixels mantém a foto logo acima do nome.
+        local screenPosition, onScreen =
+            camera:WorldToViewportPoint(head.Position)
+
+        if onScreen and screenPosition.Z > 0 then
+            ProfileImage.Position = UDim2.fromOffset(
+                screenPosition.X,
+                screenPosition.Y - 65
+            )
+
+            ProfileImage.Visible = true
+        else
+            ProfileImage.Visible = false
+        end
+    end)
+
+    ProfileGui.Destroying:Connect(function()
+        if connection then
+            connection:Disconnect()
+        end
+    end)
+
+    character.AncestryChanged:Connect(function(_, parent)
+        if parent == nil then
+            if connection then
+                connection:Disconnect()
+            end
+
+            if ProfileGui.Parent then
+                ProfileGui:Destroy()
+            end
+        end
+    end)
+end
+
+--========================================================--
+-- NOTIFICAÇÃO
+--========================================================--
+
+pcall(function()
+    StarterGui:SetCore("ResetNotification", {})
+end)
+
 pcall(function()
     StarterGui:SetCore("SendNotification", {
         Title = "Script by henrique👀",
         Text = "script ESP",
         Button1 = "Fechar",
         Duration = math.huge,
-        -- IMAGEM COM O ID QUE VOCÊ PASSOU E TAMANHO AUMENTADO!
         Image = "rbxassetid://129676103296599",
-        ImageSize = UDim2.new(0, 220, 0, 140), -- Tamanho maior que o padrão, bem visível
+        ImageSize = UDim2.new(0, 220, 0, 140),
         ImageTransparency = 0
     })
 end)
 
---//Loop\\--
+--========================================================--
+-- LOOP ESP
+--========================================================--
+
+local DB = false
+
 while task.wait() do
     if not getgenv().Toggle then
         break
     end
-    if DB then 
-        return 
+
+    if DB then
+        return
     end
+
     DB = true
 
     pcall(function()
-        for i,v in pairs(P:GetChildren()) do
+        for i, v in pairs(P:GetChildren()) do
             if v:IsA("Player") then
                 if v ~= LP then
                     if v.Character then
 
-                        local pos = math.floor(((LP.Character:FindFirstChild("HumanoidRootPart")).Position - (v.Character:FindFirstChild("HumanoidRootPart")).Position).magnitude)
-                        -- Credits to Infinite Yield for this part (pos) ^^^^^^
+                        local character = v.Character
+                        local myCharacter = LP.Character
 
-                        if v.Character:FindFirstChild("Totally NOT Esp") == nil and v.Character:FindFirstChild("Icon") == nil and getgenv().TC == false then
-                            --//ESP-Highlight\\--
-                            local ESP = Instance.new("Highlight", v.Character)
+                        if not myCharacter then
+                            continue
+                        end
+
+                        local myRoot = myCharacter:FindFirstChild("HumanoidRootPart")
+                        local targetRoot = character:FindFirstChild("HumanoidRootPart")
+                        local head = character:FindFirstChild("Head")
+
+                        if not myRoot or not targetRoot then
+                            continue
+                        end
+
+                        local pos = math.floor(
+                            (myRoot.Position - targetRoot.Position).Magnitude
+                        )
+
+                        if character:FindFirstChild("Totally NOT Esp") == nil
+                        and character:FindFirstChild("Icon") == nil
+                        and getgenv().TC == false then
+
+                            --// ESP HIGHLIGHT \\--
+
+                            local ESP = Instance.new("Highlight", character)
 
                             ESP.Name = "Totally NOT Esp"
-                            ESP.Adornee = v.Character
+                            ESP.Adornee = character
                             ESP.Archivable = true
                             ESP.Enabled = true
                             ESP.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -242,35 +365,47 @@ while task.wait() do
                             ESP.OutlineColor = Color3.fromRGB(255, 255, 255)
                             ESP.OutlineTransparency = 0
 
-                            --//ESP-Text\\--
-                            local Icon = Instance.new("BillboardGui", v.Character)
+                            --// NOME ACIMA DA CABEÇA \\--
+
+                            local Icon = Instance.new("BillboardGui", character)
                             local ESPText = Instance.new("TextLabel")
 
                             Icon.Name = "Icon"
+                            Icon.Adornee = head or targetRoot
                             Icon.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
                             Icon.Active = true
                             Icon.AlwaysOnTop = true
                             Icon.ExtentsOffset = Vector3.new(0, 1, 0)
-                            Icon.LightInfluence = 1.000
-                            Icon.Size = UDim2.new(0, 800, 0, 50)
+                            Icon.LightInfluence = 1
+                            Icon.Size = UDim2.fromOffset(900, 65)
 
                             ESPText.Name = "ESP Text"
                             ESPText.Parent = Icon
                             ESPText.BackgroundColor3 = v.TeamColor.Color
-                            ESPText.BackgroundTransparency = 1.000
-                            ESPText.Size = UDim2.new(0, 800, 0, 50)
+                            ESPText.BackgroundTransparency = 1
+                            ESPText.Size = UDim2.fromScale(1, 1)
                             ESPText.Font = Enum.Font.SciFi
-                            ESPText.Text = v[PlayerName].." | Distance: "..pos
+                            ESPText.Text = v[PlayerName] .. " | Distance: " .. pos
                             ESPText.TextColor3 = v.TeamColor.Color
-                            ESPText.TextSize = 10.800
+                            ESPText.TextSize = 14
                             ESPText.TextWrapped = true
+
+                            --// FOTO ACIMA DA CAIXA DE TEXTO \\--
+
+                            AddProfilePicture(v, character)
+
                         else
-                            if v.TeamColor ~= LP.TeamColor and v.Character:FindFirstChild("Totally NOT Esp") == nil and v.Character:FindFirstChild("Icon") == nil and getgenv().TC == true then
-                                --//ESP-Highlight\\--
-                                local ESP = Instance.new("Highlight", v.Character)
+                            if v.TeamColor ~= LP.TeamColor
+                            and character:FindFirstChild("Totally NOT Esp") == nil
+                            and character:FindFirstChild("Icon") == nil
+                            and getgenv().TC == true then
+
+                                --// ESP HIGHLIGHT \\--
+
+                                local ESP = Instance.new("Highlight", character)
 
                                 ESP.Name = "Totally NOT Esp"
-                                ESP.Adornee = v.Character
+                                ESP.Adornee = character
                                 ESP.Archivable = true
                                 ESP.Enabled = true
                                 ESP.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
@@ -279,39 +414,53 @@ while task.wait() do
                                 ESP.OutlineColor = Color3.fromRGB(255, 255, 255)
                                 ESP.OutlineTransparency = 0
 
-                                --//ESP-Text\\--
-                                local Icon = Instance.new("BillboardGui", v.Character)
+                                --// NOME ACIMA DA CABEÇA \\--
+
+                                local Icon = Instance.new("BillboardGui", character)
                                 local ESPText = Instance.new("TextLabel")
 
                                 Icon.Name = "Icon"
+                                Icon.Adornee = head or targetRoot
                                 Icon.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
                                 Icon.Active = true
                                 Icon.AlwaysOnTop = true
                                 Icon.ExtentsOffset = Vector3.new(0, 1, 0)
-                                Icon.LightInfluence = 1.000
-                                Icon.Size = UDim2.new(0, 800, 0, 50)
+                                Icon.LightInfluence = 1
+                                Icon.Size = UDim2.fromOffset(900, 65)
 
                                 ESPText.Name = "ESP Text"
                                 ESPText.Parent = Icon
                                 ESPText.BackgroundColor3 = v.TeamColor.Color
-                                ESPText.BackgroundTransparency = 1.000
-                                ESPText.Size = UDim2.new(0, 800, 0, 50)
+                                ESPText.BackgroundTransparency = 1
+                                ESPText.Size = UDim2.fromScale(1, 1)
                                 ESPText.Font = Enum.Font.SciFi
-                                ESPText.Text = v[PlayerName].." | Distance: "..pos
+                                ESPText.Text = v[PlayerName] .. " | Distance: " .. pos
                                 ESPText.TextColor3 = v.TeamColor.Color
-                                ESPText.TextSize = 10.800
+                                ESPText.TextSize = 14
                                 ESPText.TextWrapped = true
+
+                                --// FOTO ACIMA DA CAIXA DE TEXTO \\--
+
+                                AddProfilePicture(v, character)
+
                             else
-                                if not v.Character:FindFirstChild("Totally NOT Esp").FillColor == v.TeamColor.Color and not v.Character:FindFirstChild("Icon").TextColor3 == v.TeamColor.Color then
-                                    v.Character:FindFirstChild("Totally NOT Esp").FillColor = v.TeamColor.Color
-                                    v.Character:FindFirstChild("Icon").TextColor3 = v.TeamColor.Color
+                                if not character:FindFirstChild("Totally NOT Esp").FillColor == v.TeamColor.Color
+                                and not character:FindFirstChild("Icon").TextColor3 == v.TeamColor.Color then
+
+                                    character:FindFirstChild("Totally NOT Esp").FillColor = v.TeamColor.Color
+                                    character:FindFirstChild("Icon").TextColor3 = v.TeamColor.Color
+
                                 else
-                                    if v.Character:FindFirstChild("Totally NOT Esp").Enabled == false and v.Character:FindFirstChild("Icon").Enabled == false then
-                                        v.Character:FindFirstChild("Totally NOT Esp").Enabled = true
-                                        v.Character:FindFirstChild("Icon").Enabled = true
+                                    if character:FindFirstChild("Totally NOT Esp").Enabled == false
+                                    and character:FindFirstChild("Icon").Enabled == false then
+
+                                        character:FindFirstChild("Totally NOT Esp").Enabled = true
+                                        character:FindFirstChild("Icon").Enabled = true
+
                                     else
-                                        if v.Character:FindFirstChild("Icon") then
-                                            v.Character:FindFirstChild("Icon")["ESP Text"].Text = v[PlayerName].." | Distance: "..pos
+                                        if character:FindFirstChild("Icon") then
+                                            character:FindFirstChild("Icon")["ESP Text"].Text =
+                                                v[PlayerName] .. " | Distance: " .. pos
                                         end
                                     end
                                 end
@@ -323,7 +472,6 @@ while task.wait() do
         end
     end)
 
-    wait()
-
+    task.wait()
     DB = false
 end
